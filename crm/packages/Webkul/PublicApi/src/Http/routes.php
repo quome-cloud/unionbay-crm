@@ -12,6 +12,7 @@ use Webkul\PublicApi\Http\Controllers\NotificationController;
 use Webkul\PublicApi\Http\Controllers\DashboardController;
 use Webkul\PublicApi\Http\Controllers\PipelineAnalyticsController;
 use Webkul\PublicApi\Http\Controllers\ActivityReportController;
+use Webkul\PublicApi\Http\Controllers\EmailTrackingController;
 use Webkul\PublicApi\Http\Controllers\ScheduledEmailController;
 use Webkul\PublicApi\Http\Controllers\ReportController;
 use Webkul\PublicApi\Http\Controllers\TagController;
@@ -22,6 +23,10 @@ Route::prefix('api/v1')->group(function () {
     Route::post('auth/login', [AuthController::class, 'login'])
         ->middleware('throttle:30,1')
         ->name('api.v1.auth.login');
+
+    // Public tracking endpoints (no auth - these are hit by email clients)
+    Route::get('track/open/{trackingId}', [EmailTrackingController::class, 'trackOpen'])->name('api.v1.track.open');
+    Route::get('track/click/{trackingId}', [EmailTrackingController::class, 'trackClick'])->name('api.v1.track.click');
 
     // Protected routes
     Route::middleware(['auth:sanctum', 'throttle:300,1'])->group(function () {
@@ -85,6 +90,11 @@ Route::prefix('api/v1')->group(function () {
         Route::put('reports/{id}', [ReportController::class, 'update'])->name('api.v1.reports.update');
         Route::delete('reports/{id}', [ReportController::class, 'destroy'])->name('api.v1.reports.destroy');
         Route::post('reports/{id}/execute', [ReportController::class, 'executeSaved'])->name('api.v1.reports.execute-saved');
+
+        // Email Tracking (specific routes before parameterized)
+        Route::post('emails/tracking/generate', [EmailTrackingController::class, 'generateTracking'])->name('api.v1.emails.tracking.generate');
+        Route::get('emails/tracking/summary', [EmailTrackingController::class, 'summary'])->name('api.v1.emails.tracking.summary');
+        Route::get('emails/{emailId}/tracking', [EmailTrackingController::class, 'events'])->where('emailId', '[0-9]+')->name('api.v1.emails.tracking');
 
         // Scheduled Emails
         Route::get('scheduled-emails', [ScheduledEmailController::class, 'index'])->name('api.v1.scheduled-emails.index');

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Webkul\Email\Models\ScheduledEmail;
 
 class ScheduledEmailController extends Controller
@@ -64,23 +65,26 @@ class ScheduledEmailController extends Controller
         $user = $request->user();
 
         // Create the email record (in draft-like state)
+        $messageId = '<scheduled-' . Str::uuid() . '@' . config('app.url', 'crm.local') . '>';
         $email = DB::table('emails')->insertGetId([
-            'subject'    => $request->input('subject'),
-            'source'     => 'web',
-            'user_type'  => 'admin',
-            'name'       => $user->name,
-            'reply'      => $request->input('reply'),
-            'from'       => json_encode($request->input('to')),
-            'sender'     => json_encode([['address' => $user->email, 'name' => $user->name]]),
-            'reply_to'   => json_encode([['address' => $user->email, 'name' => $user->name]]),
-            'cc'         => $request->input('cc') ? json_encode($request->input('cc')) : null,
-            'bcc'        => $request->input('bcc') ? json_encode($request->input('bcc')) : null,
-            'folders'    => json_encode(['scheduled']),
-            'is_read'    => 1,
-            'person_id'  => $request->input('person_id'),
-            'lead_id'    => $request->input('lead_id'),
-            'created_at' => now(),
-            'updated_at' => now(),
+            'subject'     => $request->input('subject'),
+            'source'      => 'web',
+            'user_type'   => 'admin',
+            'name'        => $user->name,
+            'reply'       => $request->input('reply'),
+            'from'        => json_encode($request->input('to')),
+            'sender'      => json_encode([['address' => $user->email, 'name' => $user->name]]),
+            'reply_to'    => json_encode([['address' => $user->email, 'name' => $user->name]]),
+            'cc'          => $request->input('cc') ? json_encode($request->input('cc')) : null,
+            'bcc'         => $request->input('bcc') ? json_encode($request->input('bcc')) : null,
+            'folders'     => json_encode(['scheduled']),
+            'is_read'     => 1,
+            'message_id'  => $messageId,
+            'tracking_id' => Str::uuid()->toString(),
+            'person_id'   => $request->input('person_id'),
+            'lead_id'     => $request->input('lead_id'),
+            'created_at'  => now(),
+            'updated_at'  => now(),
         ]);
 
         // Create the scheduled email record
