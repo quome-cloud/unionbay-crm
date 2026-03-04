@@ -14,13 +14,13 @@
             @endphp
             @if ($wlLogo)
                 <img
-                    class="h-10 w-max"
+                    class="h-20 w-max object-contain"
                     src="{{ $wlLogo }}"
                     alt="{{ $wlAppName }}"
                 />
             @elseif ($logo = core()->getConfigData('general.design.admin_logo.logo_image'))
                 <img
-                    class="h-10 w-[110px]"
+                    class="h-20 w-max object-contain"
                     src="{{ Storage::url($logo) }}"
                     alt="{{ $wlAppName }}"
                 />

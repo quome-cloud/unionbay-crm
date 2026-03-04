@@ -12,26 +12,26 @@
         <a href="{{ route('admin.dashboard.index') }}">
             @if ($wlLogo)
                 <img
-                    class="h-10"
+                    class="h-14"
                     src="{{ $wlLogo }}"
                     alt="{{ $wlAppName }}"
                 />
             @elseif ($logo = core()->getConfigData('general.general.admin_logo.logo_image'))
                 <img
-                    class="h-10"
+                    class="h-14"
                     src="{{ Storage::url($logo) }}"
                     alt="{{ $wlAppName }}"
                 />
             @else
                 <img
-                    class="h-10 max-sm:hidden"
+                    class="h-14 max-sm:hidden"
                     src="{{ request()->cookie('dark_mode') ? vite()->asset('images/dark-logo.svg') : vite()->asset('images/logo.svg') }}"
                     id="logo-image"
                     alt="{{ $wlAppName }}"
                 />
 
                 <img
-                    class="h-10 sm:hidden"
+                    class="h-14 sm:hidden"
                     src="{{ request()->cookie('dark_mode') ? vite()->asset('images/mobile-dark-logo.svg') : vite()->asset('images/mobile-light-logo.svg') }}"
                     id="logo-image"
                     alt="{{ $wlAppName }}"
@@ -90,11 +90,17 @@
             <!-- Admin Dropdown -->
             <x-slot:content class="mt-2 border-t-0 !p-0">
                 <div class="flex items-center gap-1.5 border border-x-0 border-b-gray-300 px-5 py-2.5 dark:border-gray-800">
-                    <img
-                        src="{{ url('cache/logo.png') }}"
-                        width="24"
-                        height="24"
-                    />
+                    @if ($wlLogo)
+                        <img
+                            src="{{ $wlLogo }}"
+                            class="h-6 w-6 object-contain"
+                        />
+                    @else
+                        <img
+                            src="{{ vite()->asset('images/logo.svg') }}"
+                            class="h-6 w-6 object-contain"
+                        />
+                    @endif
 
                     <!-- Version -->
                     <p class="text-gray-400">

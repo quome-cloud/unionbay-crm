@@ -24,19 +24,19 @@
                 @endphp
                 @if ($wlMobileLogo)
                     <img
-                        class="h-10"
+                        class="h-14"
                         src="{{ $wlMobileLogo }}"
                         alt="{{ $wlMobileAppName }}"
                     />
                 @elseif ($logo = core()->getConfigData('general.design.admin_logo.logo_image'))
                     <img
-                        class="h-10"
+                        class="h-14"
                         src="{{ Storage::url($logo) }}"
                         alt="{{ $wlMobileAppName }}"
                     />
                 @else
                     <img
-                        class="h-10"
+                        class="h-14"
                         src="{{ request()->cookie('dark_mode') ? vite()->asset('images/dark-logo.svg') : vite()->asset('images/logo.svg') }}"
                         id="logo-image"
                         alt="{{ $wlMobileAppName }}"
