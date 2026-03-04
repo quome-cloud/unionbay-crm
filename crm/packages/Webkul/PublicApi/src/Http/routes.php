@@ -11,6 +11,7 @@ use Webkul\PublicApi\Http\Controllers\CommentController;
 use Webkul\PublicApi\Http\Controllers\NotificationController;
 use Webkul\PublicApi\Http\Controllers\DashboardController;
 use Webkul\PublicApi\Http\Controllers\PipelineAnalyticsController;
+use Webkul\PublicApi\Http\Controllers\ActivityReportController;
 use Webkul\PublicApi\Http\Controllers\ReportController;
 use Webkul\PublicApi\Http\Controllers\TagController;
 use Webkul\PublicApi\Http\Controllers\TrashController;
@@ -83,6 +84,12 @@ Route::prefix('api/v1')->group(function () {
         Route::put('reports/{id}', [ReportController::class, 'update'])->name('api.v1.reports.update');
         Route::delete('reports/{id}', [ReportController::class, 'destroy'])->name('api.v1.reports.destroy');
         Route::post('reports/{id}/execute', [ReportController::class, 'executeSaved'])->name('api.v1.reports.execute-saved');
+
+        // Activity Reports
+        Route::get('reports/activities/summary', [ActivityReportController::class, 'summary'])->name('api.v1.reports.activities.summary');
+        Route::get('reports/activities/by-user', [ActivityReportController::class, 'byUser'])->name('api.v1.reports.activities.by-user');
+        Route::get('reports/activities/leaderboard', [ActivityReportController::class, 'leaderboard'])->name('api.v1.reports.activities.leaderboard');
+        Route::get('reports/activities/trends', [ActivityReportController::class, 'trends'])->name('api.v1.reports.activities.trends');
 
         // Trash
         Route::get('trash', [TrashController::class, 'index'])->name('api.v1.trash.index');
