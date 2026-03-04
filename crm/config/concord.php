@@ -22,6 +22,7 @@ return [
         \Webkul\WhiteLabel\Providers\ModuleServiceProvider::class,
         \Webkul\ActionStream\Providers\ModuleServiceProvider::class,
         \Webkul\Notification\Providers\ModuleServiceProvider::class,
+        \Webkul\ReportBuilder\Providers\ModuleServiceProvider::class,
     ],
 
     'register_route_models' => true,

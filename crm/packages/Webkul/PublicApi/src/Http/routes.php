@@ -10,6 +10,7 @@ use Webkul\PublicApi\Http\Controllers\ActionStreamController;
 use Webkul\PublicApi\Http\Controllers\CommentController;
 use Webkul\PublicApi\Http\Controllers\NotificationController;
 use Webkul\PublicApi\Http\Controllers\PipelineAnalyticsController;
+use Webkul\PublicApi\Http\Controllers\ReportController;
 use Webkul\PublicApi\Http\Controllers\TagController;
 use Webkul\PublicApi\Http\Controllers\TrashController;
 
@@ -68,6 +69,16 @@ Route::prefix('api/v1')->group(function () {
         Route::get('analytics/forecast', [PipelineAnalyticsController::class, 'forecast'])->name('api.v1.analytics.forecast');
         Route::get('analytics/velocity', [PipelineAnalyticsController::class, 'velocity'])->name('api.v1.analytics.velocity');
         Route::get('analytics/summary', [PipelineAnalyticsController::class, 'summary'])->name('api.v1.analytics.summary');
+
+        // Reports
+        Route::get('reports/schema', [ReportController::class, 'schema'])->name('api.v1.reports.schema');
+        Route::post('reports/execute', [ReportController::class, 'execute'])->name('api.v1.reports.execute');
+        Route::get('reports', [ReportController::class, 'index'])->name('api.v1.reports.index');
+        Route::post('reports', [ReportController::class, 'store'])->name('api.v1.reports.store');
+        Route::get('reports/{id}', [ReportController::class, 'show'])->name('api.v1.reports.show');
+        Route::put('reports/{id}', [ReportController::class, 'update'])->name('api.v1.reports.update');
+        Route::delete('reports/{id}', [ReportController::class, 'destroy'])->name('api.v1.reports.destroy');
+        Route::post('reports/{id}/execute', [ReportController::class, 'executeSaved'])->name('api.v1.reports.execute-saved');
 
         // Trash
         Route::get('trash', [TrashController::class, 'index'])->name('api.v1.trash.index');
