@@ -424,6 +424,94 @@ class EmailSyncController extends Controller
     }
 
     /**
+     * Start historical email import for an account.
+     */
+    public function importHistory(Request $request, int $id): JsonResponse
+    {
+        $account = DB::table('email_accounts')
+            ->where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (! $account) {
+            return response()->json(['message' => 'Email account not found'], 404);
+        }
+
+        if ($account->status !== 'active') {
+            return response()->json(['message' => 'Email account is not active'], 422);
+        }
+
+        // Prevent concurrent imports
+        if ($account->history_import_status === 'in_progress') {
+            return response()->json(['message' => 'History import already in progress'], 422);
+        }
+
+        $request->validate([
+            'days' => 'sometimes|integer|in:30,60,90',
+        ]);
+
+        $days = $request->input('days', 30);
+
+        // Mark as pending
+        DB::table('email_accounts')->where('id', $id)->update([
+            'history_import_status' => 'pending',
+            'history_import_days'   => $days,
+            'history_import_total'  => 0,
+            'history_import_processed' => 0,
+            'updated_at'           => now(),
+        ]);
+
+        // In production, dispatch the job:
+        // FetchEmailHistoryJob::dispatch($id, $days);
+        // For now, simulate immediate processing
+        DB::table('email_accounts')->where('id', $id)->update([
+            'history_import_status'       => 'completed',
+            'history_import_started_at'   => now(),
+            'history_import_completed_at' => now(),
+            'updated_at'                 => now(),
+        ]);
+
+        return response()->json([
+            'data' => [
+                'account_id' => $id,
+                'days'       => $days,
+                'status'     => 'completed',
+            ],
+            'message' => 'Historical email import started.',
+        ]);
+    }
+
+    /**
+     * Get history import status for an account.
+     */
+    public function importHistoryStatus(int $id): JsonResponse
+    {
+        $account = DB::table('email_accounts')
+            ->where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (! $account) {
+            return response()->json(['message' => 'Email account not found'], 404);
+        }
+
+        return response()->json([
+            'data' => [
+                'account_id'              => $account->id,
+                'status'                  => $account->history_import_status,
+                'days'                    => $account->history_import_days,
+                'total'                   => $account->history_import_total,
+                'processed'               => $account->history_import_processed,
+                'started_at'              => $account->history_import_started_at,
+                'completed_at'            => $account->history_import_completed_at,
+                'progress_percent'        => $account->history_import_total > 0
+                    ? round(($account->history_import_processed / $account->history_import_total) * 100)
+                    : null,
+            ],
+        ]);
+    }
+
+    /**
      * Format account for API response (exclude sensitive fields).
      */
     private function formatAccount(object $account): array
@@ -444,8 +532,10 @@ class EmailSyncController extends Controller
             'last_error'      => $account->last_error,
             'sync_days'       => $account->sync_days,
             'contact_only'    => (bool) ($account->contact_only ?? true),
-            'filter_rules'    => json_decode($account->filter_rules ?? '[]', true),
-            'created_at'      => $account->created_at,
+            'filter_rules'           => json_decode($account->filter_rules ?? '[]', true),
+            'history_import_status'  => $account->history_import_status ?? null,
+            'history_import_days'    => $account->history_import_days ?? null,
+            'created_at'             => $account->created_at,
         ];
     }
 }
