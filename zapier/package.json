@@ -1,0 +1,19 @@
+{
+  "name": "quome-crm-zapier",
+  "version": "1.0.0",
+  "description": "Zapier integration for Quome CRM",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --testTimeout 10000"
+  },
+  "dependencies": {
+    "zapier-platform-core": "15.x"
+  },
+  "devDependencies": {
+    "jest": "29.x"
+  },
+  "zapier": {
+    "id": 0,
+    "key": "quome-crm"
+  }
+}

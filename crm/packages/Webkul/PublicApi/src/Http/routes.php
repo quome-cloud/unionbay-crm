@@ -33,6 +33,7 @@ use Webkul\PublicApi\Http\Controllers\OutlookCalendarController;
 use Webkul\PublicApi\Http\Controllers\VoipController;
 use Webkul\PublicApi\Http\Controllers\EmailSyncController;
 use Webkul\PublicApi\Http\Controllers\SharedInboxController;
+use Webkul\PublicApi\Http\Controllers\WebhookController;
 
 Route::prefix('api/v1')->group(function () {
     // Public auth routes
@@ -262,6 +263,14 @@ Route::prefix('api/v1')->group(function () {
         Route::post('integrations/voip/webhook', [VoipController::class, 'webhook'])->name('api.v1.voip.webhook');
         Route::get('integrations/voip/contacts/{contactId}/calls', [VoipController::class, 'contactCalls'])->where('contactId', '[0-9]+')->name('api.v1.voip.contact-calls');
         Route::get('integrations/voip/recordings/{callLogId}', [VoipController::class, 'recording'])->where('callLogId', '[0-9]+')->name('api.v1.voip.recording');
+
+        // Webhooks (Zapier/Make.com integration)
+        Route::get('webhooks', [WebhookController::class, 'index'])->name('api.v1.webhooks.index');
+        Route::post('webhooks/subscribe', [WebhookController::class, 'subscribe'])->name('api.v1.webhooks.subscribe');
+        Route::delete('webhooks/{id}', [WebhookController::class, 'unsubscribe'])->where('id', '[0-9]+')->name('api.v1.webhooks.unsubscribe');
+        Route::get('webhooks/{id}', [WebhookController::class, 'show'])->where('id', '[0-9]+')->name('api.v1.webhooks.show');
+        Route::get('webhooks/events', [WebhookController::class, 'events'])->name('api.v1.webhooks.events');
+        Route::post('webhooks/{id}/test', [WebhookController::class, 'test'])->where('id', '[0-9]+')->name('api.v1.webhooks.test');
 
         // Trash
         Route::get('trash', [TrashController::class, 'index'])->name('api.v1.trash.index');
