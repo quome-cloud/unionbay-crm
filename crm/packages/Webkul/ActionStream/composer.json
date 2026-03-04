@@ -1,0 +1,12 @@
+{
+    "name": "webkul/action-stream",
+    "description": "Action Stream (Next Actions) package for Krayin CRM",
+    "type": "library",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Webkul\\ActionStream\\": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}

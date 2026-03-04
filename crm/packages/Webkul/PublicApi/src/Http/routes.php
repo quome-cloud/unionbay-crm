@@ -6,6 +6,7 @@ use Webkul\PublicApi\Http\Controllers\AuthController;
 use Webkul\PublicApi\Http\Controllers\ContactController;
 use Webkul\PublicApi\Http\Controllers\LeadController;
 use Webkul\PublicApi\Http\Controllers\PipelineController;
+use Webkul\PublicApi\Http\Controllers\ActionStreamController;
 use Webkul\PublicApi\Http\Controllers\TagController;
 
 Route::prefix('api/v1')->group(function () {
@@ -35,5 +36,15 @@ Route::prefix('api/v1')->group(function () {
 
         // Tags
         Route::apiResource('tags', TagController::class)->except(['show']);
+
+        // Action Stream
+        Route::get('action-stream', [ActionStreamController::class, 'index'])->name('api.v1.action-stream.index');
+        Route::post('action-stream', [ActionStreamController::class, 'store'])->name('api.v1.action-stream.store');
+        Route::get('action-stream/overdue-count', [ActionStreamController::class, 'overdueCount'])->name('api.v1.action-stream.overdue-count');
+        Route::get('action-stream/{id}', [ActionStreamController::class, 'show'])->name('api.v1.action-stream.show');
+        Route::put('action-stream/{id}', [ActionStreamController::class, 'update'])->name('api.v1.action-stream.update');
+        Route::post('action-stream/{id}/complete', [ActionStreamController::class, 'complete'])->name('api.v1.action-stream.complete');
+        Route::post('action-stream/{id}/snooze', [ActionStreamController::class, 'snooze'])->name('api.v1.action-stream.snooze');
+        Route::delete('action-stream/{id}', [ActionStreamController::class, 'destroy'])->name('api.v1.action-stream.destroy');
     });
 });
