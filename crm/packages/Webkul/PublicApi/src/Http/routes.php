@@ -22,6 +22,7 @@ use Webkul\PublicApi\Http\Controllers\GdprController;
 use Webkul\PublicApi\Http\Controllers\BroadcastController;
 use Webkul\PublicApi\Http\Controllers\BackupController;
 use Webkul\PublicApi\Http\Controllers\EmailSequenceController;
+use Webkul\PublicApi\Http\Controllers\RoleController;
 
 Route::prefix('api/v1')->group(function () {
     // Public auth routes
@@ -122,6 +123,10 @@ Route::prefix('api/v1')->group(function () {
         Route::get('gdpr/contacts/{contactId}/export', [GdprController::class, 'export'])->where('contactId', '[0-9]+')->name('api.v1.gdpr.export');
         Route::post('gdpr/contacts/{contactId}/erase', [GdprController::class, 'erase'])->where('contactId', '[0-9]+')->name('api.v1.gdpr.erase');
         Route::get('gdpr/contacts/{contactId}/consent', [GdprController::class, 'consentStatus'])->where('contactId', '[0-9]+')->name('api.v1.gdpr.consent');
+
+        // Roles
+        Route::get('roles', [RoleController::class, 'index'])->name('api.v1.roles.index');
+        Route::get('roles/{id}', [RoleController::class, 'show'])->where('id', '[0-9]+')->name('api.v1.roles.show');
 
         // Email Sequences
         Route::get('email-sequences', [EmailSequenceController::class, 'index'])->name('api.v1.email-sequences.index');
