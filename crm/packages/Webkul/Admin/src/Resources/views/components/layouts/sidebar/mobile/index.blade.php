@@ -17,18 +17,29 @@
             </x-slot>
 
             <x-slot:header>
-                @if ($logo = core()->getConfigData('general.design.admin_logo.logo_image'))
+                @php
+                    $wlMobile = \Webkul\WhiteLabel\Models\WhiteLabelSetting::first();
+                    $wlMobileLogo = request()->cookie('dark_mode') ? ($wlMobile?->logo_dark_url ?? $wlMobile?->logo_url) : $wlMobile?->logo_url;
+                    $wlMobileAppName = $wlMobile?->app_name ?? config('app.name');
+                @endphp
+                @if ($wlMobileLogo)
+                    <img
+                        class="h-10"
+                        src="{{ $wlMobileLogo }}"
+                        alt="{{ $wlMobileAppName }}"
+                    />
+                @elseif ($logo = core()->getConfigData('general.design.admin_logo.logo_image'))
                     <img
                         class="h-10"
                         src="{{ Storage::url($logo) }}"
-                        alt="{{ config('app.name') }}"
+                        alt="{{ $wlMobileAppName }}"
                     />
                 @else
                     <img
                         class="h-10"
                         src="{{ request()->cookie('dark_mode') ? vite()->asset('images/dark-logo.svg') : vite()->asset('images/logo.svg') }}"
                         id="logo-image"
-                        alt="{{ config('app.name') }}"
+                        alt="{{ $wlMobileAppName }}"
                     />
                 @endif
             </x-slot>

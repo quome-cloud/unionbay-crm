@@ -58,7 +58,17 @@
         href="{{ url('cache/logo/bagisto.png') }}"
     >
 
-    @if ($favicon = core()->getConfigData('general.design.admin_logo.favicon'))
+    @php
+        $wlFavicon = \Webkul\WhiteLabel\Models\WhiteLabelSetting::first()?->favicon_url;
+    @endphp
+    @if ($wlFavicon)
+        <link
+            type="image/x-icon"
+            href="{{ $wlFavicon }}"
+            rel="shortcut icon"
+            sizes="16x16"
+        >
+    @elseif ($favicon = core()->getConfigData('general.design.admin_logo.favicon'))
         <link
             type="image/x-icon"
             href="{{ Storage::url($favicon) }}"
@@ -75,7 +85,10 @@
     @endif
 
     @php
-        $brandColor = core()->getConfigData('general.settings.menu_color.brand_color') ?? '#0E90D9';
+        $wl = \Webkul\WhiteLabel\Models\WhiteLabelSetting::first();
+        $brandColor = $wl?->primary_color ?? core()->getConfigData('general.settings.menu_color.brand_color') ?? '#0E90D9';
+        $secondaryColor = $wl?->secondary_color ?? '#7C3AED';
+        $accentColor = $wl?->accent_color ?? '#F59E0B';
     @endphp
 
     @stack('styles')
@@ -83,9 +96,13 @@
     <style>
         :root {
             --brand-color: {{ $brandColor }};
+            --wl-primary-color: {{ $brandColor }};
+            --wl-secondary-color: {{ $secondaryColor }};
+            --wl-accent-color: {{ $accentColor }};
         }
 
         {!! core()->getConfigData('general.content.custom_scripts.custom_css') !!}
+        @if($wl?->custom_css){!! $wl->custom_css !!}@endif
     </style>
 
     {!! view_render_event('admin.layout.head.after') !!}

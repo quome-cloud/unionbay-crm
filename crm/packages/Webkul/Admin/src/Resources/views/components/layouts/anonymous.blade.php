@@ -48,7 +48,22 @@
         rel="stylesheet"
     />
 
-    @if ($favicon = core()->getConfigData('general.design.admin_logo.favicon'))
+    @php
+        $wlAnon = \Webkul\WhiteLabel\Models\WhiteLabelSetting::first();
+        $wlAnonFavicon = $wlAnon?->favicon_url;
+        $brandColor = $wlAnon?->primary_color ?? core()->getConfigData('general.settings.menu_color.brand_color') ?? '#0E90D9';
+        $secondaryColor = $wlAnon?->secondary_color ?? '#7C3AED';
+        $accentColor = $wlAnon?->accent_color ?? '#F59E0B';
+    @endphp
+
+    @if ($wlAnonFavicon)
+        <link
+            type="image/x-icon"
+            href="{{ $wlAnonFavicon }}"
+            rel="shortcut icon"
+            sizes="16x16"
+        >
+    @elseif ($favicon = core()->getConfigData('general.design.admin_logo.favicon'))
         <link
             type="image/x-icon"
             href="{{ Storage::url($favicon) }}"
@@ -64,18 +79,18 @@
         />
     @endif
 
-    @php
-        $brandColor = core()->getConfigData('general.settings.menu_color.brand_color') ?? '#0E90D9';
-    @endphp
-
     @stack('styles')
 
     <style>
         :root {
             --brand-color: {{ $brandColor }};
+            --wl-primary-color: {{ $brandColor }};
+            --wl-secondary-color: {{ $secondaryColor }};
+            --wl-accent-color: {{ $accentColor }};
         }
 
         {!! core()->getConfigData('general.content.custom_scripts.custom_css') !!}
+        @if($wlAnon?->custom_css){!! $wlAnon->custom_css !!}@endif
     </style>
 
     {!! view_render_event('admin.layout.head') !!}

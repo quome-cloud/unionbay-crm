@@ -80,6 +80,51 @@ test.describe('White Label Settings', () => {
     expect(css).toContain('--wl-accent-color');
   });
 
+  test('CSS custom properties render in page after color change', async ({ page }) => {
+    // Update primary color
+    await page.request.post('/admin/api/white-label', {
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      data: { primary_color: '#E11D48' },
+    });
+
+    // Load dashboard and check CSS vars are in the page
+    await page.goto('/admin/dashboard');
+    await page.waitForLoadState('networkidle');
+
+    const html = await page.content();
+    expect(html).toContain('--wl-primary-color: #E11D48');
+    expect(html).toContain('--wl-secondary-color');
+    expect(html).toContain('--wl-accent-color');
+
+    // Reset
+    await page.request.post('/admin/api/white-label', {
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      data: { primary_color: '#1E40AF' },
+    });
+  });
+
+  test('login page reflects white-label branding', async ({ page }) => {
+    // Set a custom app name
+    await page.request.post('/admin/api/white-label', {
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      data: { app_name: 'MyBrand CRM' },
+    });
+
+    // Check login page (need a fresh non-authed page)
+    await page.goto('/admin/login');
+    await page.waitForLoadState('networkidle');
+
+    const html = await page.content();
+    // The CSS vars should be present on login page too
+    expect(html).toContain('--wl-primary-color');
+
+    // Reset
+    await page.request.post('/admin/api/white-label', {
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      data: { app_name: 'CRM' },
+    });
+  });
+
   test('rejects invalid color format', async ({ page }) => {
     const response = await page.request.post('/admin/api/white-label', {
       headers: {

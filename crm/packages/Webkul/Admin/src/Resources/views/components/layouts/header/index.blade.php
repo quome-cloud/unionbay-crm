@@ -4,26 +4,37 @@
         <!-- Sidebar Menu -->
         <x-admin::layouts.sidebar.mobile />
         
+        @php
+            $wlSettings = \Webkul\WhiteLabel\Models\WhiteLabelSetting::first();
+            $wlLogo = request()->cookie('dark_mode') ? ($wlSettings?->logo_dark_url ?? $wlSettings?->logo_url) : $wlSettings?->logo_url;
+            $wlAppName = $wlSettings?->app_name ?? config('app.name');
+        @endphp
         <a href="{{ route('admin.dashboard.index') }}">
-            @if ($logo = core()->getConfigData('general.general.admin_logo.logo_image'))
+            @if ($wlLogo)
+                <img
+                    class="h-10"
+                    src="{{ $wlLogo }}"
+                    alt="{{ $wlAppName }}"
+                />
+            @elseif ($logo = core()->getConfigData('general.general.admin_logo.logo_image'))
                 <img
                     class="h-10"
                     src="{{ Storage::url($logo) }}"
-                    alt="{{ config('app.name') }}"
+                    alt="{{ $wlAppName }}"
                 />
             @else
                 <img
                     class="h-10 max-sm:hidden"
                     src="{{ request()->cookie('dark_mode') ? vite()->asset('images/dark-logo.svg') : vite()->asset('images/logo.svg') }}"
                     id="logo-image"
-                    alt="{{ config('app.name') }}"
+                    alt="{{ $wlAppName }}"
                 />
 
                 <img
                     class="h-10 sm:hidden"
                     src="{{ request()->cookie('dark_mode') ? vite()->asset('images/mobile-dark-logo.svg') : vite()->asset('images/mobile-light-logo.svg') }}"
                     id="logo-image"
-                    alt="{{ config('app.name') }}"
+                    alt="{{ $wlAppName }}"
                 />
             @endif
         </a>
