@@ -24,6 +24,7 @@ use Webkul\PublicApi\Http\Controllers\BackupController;
 use Webkul\PublicApi\Http\Controllers\EmailSequenceController;
 use Webkul\PublicApi\Http\Controllers\RoleController;
 use Webkul\PublicApi\Http\Controllers\PlaybookController;
+use Webkul\PublicApi\Http\Controllers\MailchimpController;
 
 Route::prefix('api/v1')->group(function () {
     // Public auth routes
@@ -159,6 +160,16 @@ Route::prefix('api/v1')->group(function () {
         // Broadcasting
         Route::post('broadcast/test', [BroadcastController::class, 'test'])->name('api.v1.broadcast.test');
         Route::get('broadcast/channels', [BroadcastController::class, 'channels'])->name('api.v1.broadcast.channels');
+
+        // Mailchimp
+        Route::get('integrations/mailchimp/status', [MailchimpController::class, 'status'])->name('api.v1.mailchimp.status');
+        Route::post('integrations/mailchimp/connect', [MailchimpController::class, 'connect'])->name('api.v1.mailchimp.connect');
+        Route::post('integrations/mailchimp/disconnect', [MailchimpController::class, 'disconnect'])->name('api.v1.mailchimp.disconnect');
+        Route::get('integrations/mailchimp/audiences', [MailchimpController::class, 'audiences'])->name('api.v1.mailchimp.audiences');
+        Route::post('integrations/mailchimp/subscribe', [MailchimpController::class, 'subscribe'])->name('api.v1.mailchimp.subscribe');
+        Route::post('integrations/mailchimp/unsubscribe', [MailchimpController::class, 'unsubscribe'])->name('api.v1.mailchimp.unsubscribe');
+        Route::get('integrations/mailchimp/contacts/{contactId}/status', [MailchimpController::class, 'contactStatus'])->where('contactId', '[0-9]+')->name('api.v1.mailchimp.contact-status');
+        Route::get('integrations/mailchimp/contacts/{contactId}/campaigns', [MailchimpController::class, 'campaignStats'])->where('contactId', '[0-9]+')->name('api.v1.mailchimp.campaign-stats');
 
         // Trash
         Route::get('trash', [TrashController::class, 'index'])->name('api.v1.trash.index');
