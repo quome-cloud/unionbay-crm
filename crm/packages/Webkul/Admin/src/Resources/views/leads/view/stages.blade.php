@@ -173,6 +173,82 @@
             </x-admin::form>
 
             {!! view_render_event('admin.leads.view.stages.form_controls.after', ['lead' => $lead]) !!}
+
+            <!-- Next Action Prompt Modal (appears after stage change) -->
+            <x-admin::modal ref="nextActionPromptModal">
+                <x-slot:header>
+                    <h3 class="text-base font-semibold dark:text-white" data-testid="next-action-prompt-title">
+                        Set Next Action
+                    </h3>
+                </x-slot:header>
+
+                <x-slot:content>
+                    <p class="mb-4 text-sm text-gray-600 dark:text-gray-400" data-testid="next-action-prompt-message">
+                        The lead moved to stage <strong>@{{ currentStage.name }}</strong>. What's the next action?
+                    </p>
+
+                    <div class="flex flex-col gap-3">
+                        <div class="flex gap-2">
+                            <select
+                                v-model="promptAction.action_type"
+                                class="w-1/2 rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                data-testid="next-action-prompt-type"
+                            >
+                                <option value="call">Call</option>
+                                <option value="email">Email</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="task">Task</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <select
+                                v-model="promptAction.priority"
+                                class="w-1/2 rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                data-testid="next-action-prompt-priority"
+                            >
+                                <option value="urgent">Urgent</option>
+                                <option value="high">High</option>
+                                <option value="normal">Normal</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                        <input
+                            type="text"
+                            v-model="promptAction.description"
+                            placeholder="Describe the next action..."
+                            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                            data-testid="next-action-prompt-description"
+                        />
+                        <input
+                            type="date"
+                            v-model="promptAction.due_date"
+                            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                            data-testid="next-action-prompt-due-date"
+                        />
+                    </div>
+                </x-slot>
+
+                <x-slot:footer>
+                    <div class="flex gap-2">
+                        <button
+                            type="button"
+                            class="secondary-button"
+                            @click="skipNextAction"
+                            data-testid="next-action-prompt-skip"
+                        >
+                            Skip
+                        </button>
+                        <button
+                            type="button"
+                            class="primary-button"
+                            @click="saveNextAction"
+                            :disabled="!promptAction.description"
+                            data-testid="next-action-prompt-save"
+                        >
+                            Set Next Action
+                        </button>
+                    </div>
+                </x-slot>
+            </x-admin::modal>
         </div>
     </script>
 
@@ -191,6 +267,13 @@
                     stages: @json($lead->pipeline->stages),
 
                     stageToggler: '',
+
+                    promptAction: {
+                        action_type: 'call',
+                        priority: 'normal',
+                        description: '',
+                        due_date: '',
+                    },
                 }
             },
 
@@ -244,12 +327,42 @@
                             this.$parent.$refs.activities.get();
 
                             this.$emitter.emit('add-flash', { type: 'success', message: response.data.message });
+
+                            // Auto-prompt for next action after stage change (skip for won/lost)
+                            if (!['won', 'lost'].includes(stage.code)) {
+                                this.promptAction = {
+                                    action_type: 'call',
+                                    priority: 'normal',
+                                    description: '',
+                                    due_date: '',
+                                };
+                                this.$refs.nextActionPromptModal.open();
+                            }
                         })
                         .catch ((error) => {
                             this.isUpdating = false;
 
                             this.$emitter.emit('add-flash', { type: 'error', message: error.response.data.message });
                         });
+                },
+
+                saveNextAction() {
+                    this.$axios.post('/api/v1/action-stream', {
+                        actionable_type: 'lead',
+                        actionable_id: {{ $lead->id }},
+                        ...this.promptAction,
+                    })
+                    .then((response) => {
+                        this.$refs.nextActionPromptModal.close();
+                        this.$emitter.emit('add-flash', { type: 'success', message: 'Next action set.' });
+                    })
+                    .catch((error) => {
+                        this.$emitter.emit('add-flash', { type: 'error', message: 'Failed to create next action.' });
+                    });
+                },
+
+                skipNextAction() {
+                    this.$refs.nextActionPromptModal.close();
                 },
             },
         });
