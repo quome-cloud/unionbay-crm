@@ -16,6 +16,7 @@ class Pipeline extends Model implements PipelineContract
      */
     protected $fillable = [
         'name',
+        'pipeline_type',
         'rotten_days',
         'is_default',
     ];

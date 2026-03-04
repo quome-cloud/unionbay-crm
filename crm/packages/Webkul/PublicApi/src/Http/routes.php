@@ -34,8 +34,9 @@ Route::prefix('api/v1')->group(function () {
         // Activities
         Route::apiResource('activities', ActivityController::class);
 
-        // Pipelines (read-only)
+        // Pipelines
         Route::get('pipelines', [PipelineController::class, 'index'])->name('api.v1.pipelines.index');
+        Route::post('pipelines', [PipelineController::class, 'store'])->name('api.v1.pipelines.store');
         Route::get('pipelines/{id}', [PipelineController::class, 'show'])->name('api.v1.pipelines.show');
 
         // Tags
