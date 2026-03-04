@@ -1,0 +1,26 @@
+{
+    "name": "krayin/laravel-white-label",
+    "authors": [
+        {
+            "name": "Quome",
+            "email": "dev@quome.io"
+        }
+    ],
+    "require": {
+        "krayin/laravel-core": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webkul\\WhiteLabel\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Webkul\\WhiteLabel\\Providers\\WhiteLabelServiceProvider"
+            ],
+            "aliases": {}
+        }
+    },
+    "minimum-stability": "dev"
+}

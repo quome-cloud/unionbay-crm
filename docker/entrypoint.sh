@@ -65,7 +65,26 @@ if [ "$HAS_USERS" = "no" ] || [ -z "$HAS_USERS" ]; then
     " 2>/dev/null || true
 
     echo "Database setup complete. Default login: admin@example.com / admin123"
+else
+    echo "Running any new migrations..."
+    php artisan migrate --force 2>&1 || true
 fi
+
+# Seed white-label defaults if not present
+php artisan tinker --execute="
+    if (\Schema::hasTable('white_label_settings') && \DB::table('white_label_settings')->count() === 0) {
+        \DB::table('white_label_settings')->insert([
+            'app_name' => 'CRM',
+            'primary_color' => '#1E40AF',
+            'secondary_color' => '#7C3AED',
+            'accent_color' => '#F59E0B',
+            'email_sender_name' => 'CRM',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        echo 'White label defaults seeded.';
+    }
+" 2>/dev/null || true
 
 # 5. Build frontend assets if not built
 if [ ! -d "public/build" ]; then
