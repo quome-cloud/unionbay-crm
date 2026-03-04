@@ -1,25 +1,18 @@
 #!/bin/bash
-set -e
 
-# Wait for MySQL to be ready (belt and suspenders with healthcheck)
-echo "Waiting for database..."
-while ! php -r "try { new PDO('mysql:host=db;port=3306;dbname=krayin_crm', 'krayin', 'secret'); echo 'ok'; } catch(Exception \$e) { exit(1); }" 2>/dev/null; do
-    sleep 2
-done
-echo "Database is ready."
+echo "Starting Krayin CRM setup..."
 
-# Install composer dependencies if vendor doesn't exist
-if [ ! -d "vendor" ]; then
+# 1. Install composer dependencies FIRST
+if [ ! -f "vendor/autoload.php" ]; then
     echo "Installing Composer dependencies..."
     composer install --no-interaction --optimize-autoloader
 fi
 
-# Set up .env if not present
+# 2. Set up .env if not present
 if [ ! -f ".env" ]; then
     echo "Setting up .env file..."
     cp .env.example .env
 
-    # Configure for Docker
     sed -i "s|APP_URL=.*|APP_URL=http://localhost:8190|" .env
     sed -i "s|DB_HOST=.*|DB_HOST=db|" .env
     sed -i "s|DB_PORT=.*|DB_PORT=3306|" .env
@@ -33,33 +26,68 @@ if [ ! -f ".env" ]; then
     sed -i "s|MAIL_HOST=.*|MAIL_HOST=mailpit|" .env
     sed -i "s|MAIL_PORT=.*|MAIL_PORT=1025|" .env
     sed -i "s|APP_TIMEZONE=.*|APP_TIMEZONE=UTC|" .env
-
-    php artisan key:generate
 fi
 
-# Run migrations if the database is empty
-TABLE_COUNT=$(php -r "try { \$pdo = new PDO('mysql:host=db;port=3306;dbname=krayin_crm', 'krayin', 'secret'); \$r = \$pdo->query('SHOW TABLES'); echo \$r->rowCount(); } catch(Exception \$e) { echo '0'; }")
+# Generate key if missing
+if grep -q "^APP_KEY=$" .env 2>/dev/null; then
+    echo "Generating application key..."
+    php artisan key:generate --force
+fi
 
-if [ "$TABLE_COUNT" = "0" ]; then
-    echo "Running initial setup..."
-    php artisan krayin-crm:install --no-interaction || true
-
-    # If install command doesn't work headlessly, do it manually
-    if [ "$TABLE_COUNT" = "0" ]; then
-        php artisan migrate --force 2>/dev/null || true
-        php artisan db:seed --force 2>/dev/null || true
+# 3. Wait for MySQL to be ready
+echo "Waiting for database..."
+MAX_TRIES=30
+TRIES=0
+while [ $TRIES -lt $MAX_TRIES ]; do
+    if php -r "try { new PDO('mysql:host=db;port=3306;dbname=krayin_crm', 'krayin', 'secret'); exit(0); } catch(Exception \$e) { exit(1); }" 2>/dev/null; then
+        echo "Database is ready."
+        break
     fi
+    TRIES=$((TRIES + 1))
+    sleep 2
+done
+
+# 4. Run migrations if the users table doesn't exist
+HAS_USERS=$(php -r "try { \$pdo = new PDO('mysql:host=db;port=3306;dbname=krayin_crm', 'krayin', 'secret'); \$r = \$pdo->query(\"SELECT COUNT(*) FROM users\"); echo \$r->fetchColumn(); } catch(Exception \$e) { echo 'no'; }" 2>/dev/null)
+
+if [ "$HAS_USERS" = "no" ] || [ -z "$HAS_USERS" ]; then
+    echo "Running initial database setup..."
+    php artisan migrate --force 2>&1 || true
+    php artisan db:seed --force 2>&1 || true
+
+    # Set admin password to known default for development
+    php artisan tinker --execute="
+        \$user = \Webkul\User\Models\User::first();
+        if (\$user) {
+            \$user->password = bcrypt('admin123');
+            \$user->save();
+        }
+    " 2>/dev/null || true
+
+    echo "Database setup complete. Default login: admin@example.com / admin123"
 fi
 
-# Build frontend assets
+# 5. Build frontend assets if not built
 if [ ! -d "public/build" ]; then
     echo "Building frontend assets..."
-    npm install 2>/dev/null || true
-    npm run build 2>/dev/null || true
+    npm install 2>&1 || true
+    npm run build 2>&1 || true
 fi
 
-# Set permissions
+# 6. Storage link and permissions
+php artisan storage:link 2>/dev/null || true
 chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 
+# 7. Clear caches for fresh start
+php artisan config:clear 2>/dev/null || true
+php artisan route:clear 2>/dev/null || true
+php artisan view:clear 2>/dev/null || true
+
+echo "============================================"
+echo "  Krayin CRM is ready!"
+echo "  Web:     http://localhost:8190"
+echo "  Mailpit: http://localhost:8191"
+echo "  Login:   admin@example.com / admin123"
+echo "============================================"
 exec "$@"
