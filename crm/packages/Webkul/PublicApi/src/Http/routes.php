@@ -27,6 +27,7 @@ use Webkul\PublicApi\Http\Controllers\PlaybookController;
 use Webkul\PublicApi\Http\Controllers\MailchimpController;
 use Webkul\PublicApi\Http\Controllers\EnrichmentController;
 use Webkul\PublicApi\Http\Controllers\QuickBooksController;
+use Webkul\PublicApi\Http\Controllers\XeroController;
 
 Route::prefix('api/v1')->group(function () {
     // Public auth routes
@@ -171,6 +172,15 @@ Route::prefix('api/v1')->group(function () {
         Route::post('integrations/quickbooks/invoices', [QuickBooksController::class, 'createInvoice'])->name('api.v1.quickbooks.create-invoice');
         Route::post('integrations/quickbooks/sync-customer', [QuickBooksController::class, 'syncCustomer'])->name('api.v1.quickbooks.sync-customer');
         Route::get('integrations/quickbooks/contacts/{contactId}/syncs', [QuickBooksController::class, 'contactSyncs'])->where('contactId', '[0-9]+')->name('api.v1.quickbooks.contact-syncs');
+
+        // Xero
+        Route::get('integrations/xero/status', [XeroController::class, 'status'])->name('api.v1.xero.status');
+        Route::post('integrations/xero/auth-url', [XeroController::class, 'authUrl'])->name('api.v1.xero.auth-url');
+        Route::post('integrations/xero/callback', [XeroController::class, 'callback'])->name('api.v1.xero.callback');
+        Route::post('integrations/xero/disconnect', [XeroController::class, 'disconnect'])->name('api.v1.xero.disconnect');
+        Route::post('integrations/xero/invoices', [XeroController::class, 'createInvoice'])->name('api.v1.xero.create-invoice');
+        Route::post('integrations/xero/sync-contact', [XeroController::class, 'syncContact'])->name('api.v1.xero.sync-contact');
+        Route::get('integrations/xero/contacts/{contactId}/syncs', [XeroController::class, 'contactSyncs'])->where('contactId', '[0-9]+')->name('api.v1.xero.contact-syncs');
 
         // Contact Enrichment
         Route::get('enrichment/config', [EnrichmentController::class, 'config'])->name('api.v1.enrichment.config');
