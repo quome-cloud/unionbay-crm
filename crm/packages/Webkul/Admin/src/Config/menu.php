@@ -79,14 +79,13 @@ return [
         'params'     => ['route' => 'trash'],
         'sort'       => 5,
         'icon-class' => '',
+    ], [
+        'key'        => 'mail.email_accounts',
+        'name'       => 'Email Accounts',
+        'route'      => 'admin.mail.email_accounts.index',
+        'sort'       => 6,
+        'icon-class' => '',
     ],
-    // , [
-    //     'key'        => 'mail.setting',
-    //     'name'       => 'admin::app.layouts.mail.setting',
-    //     'route'      => 'admin.mail.index',
-    //     'params'     => ['route' => 'setting'],
-    //     'sort'       => 5,
-    // ]
 
     /**
      * Activities.

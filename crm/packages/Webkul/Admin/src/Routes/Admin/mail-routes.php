@@ -1,8 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Webkul\Admin\Http\Controllers\Mail\EmailAccountController;
 use Webkul\Admin\Http\Controllers\Mail\EmailController;
 use Webkul\Admin\Http\Controllers\Mail\TagController;
+
+Route::get('email-accounts', [EmailAccountController::class, 'index'])->name('admin.mail.email_accounts.index');
 
 Route::prefix('mail')->middleware('sanitize_url')->group(function () {
     Route::controller(EmailController::class)->group(function () {

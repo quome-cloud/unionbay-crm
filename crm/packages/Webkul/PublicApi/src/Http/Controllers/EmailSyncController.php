@@ -307,6 +307,10 @@ class EmailSyncController extends Controller
      */
     private function testImap(object $account): bool
     {
+        if (! function_exists('imap_open')) {
+            return false;
+        }
+
         try {
             $password = Crypt::decryptString($account->imap_password);
             $connection = @imap_open(
@@ -322,7 +326,7 @@ class EmailSyncController extends Controller
 
                 return true;
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Connection failed
         }
 
@@ -348,7 +352,7 @@ class EmailSyncController extends Controller
 
                 return true;
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Connection failed
         }
 

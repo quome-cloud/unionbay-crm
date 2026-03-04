@@ -1,4 +1,4 @@
-<header class="sticky top-0 z-[10001] flex items-center justify-between gap-1 border-b border-gray-200 bg-white px-4 py-2.5 transition-all dark:border-gray-800 dark:bg-gray-900">  
+<header class="sticky top-0 z-[10001] flex items-center justify-between gap-1 border-b border-gray-200 bg-white px-4 py-2 transition-all [backface-visibility:hidden] dark:border-gray-800 dark:bg-gray-900">  
     <!-- logo -->
     <div class="flex items-center gap-1.5">
         <!-- Sidebar Menu -->
@@ -12,26 +12,26 @@
         <a href="{{ route('admin.dashboard.index') }}">
             @if ($wlLogo)
                 <img
-                    class="h-14"
+                    class="h-10"
                     src="{{ $wlLogo }}"
                     alt="{{ $wlAppName }}"
                 />
             @elseif ($logo = core()->getConfigData('general.general.admin_logo.logo_image'))
                 <img
-                    class="h-14"
+                    class="h-10"
                     src="{{ Storage::url($logo) }}"
                     alt="{{ $wlAppName }}"
                 />
             @else
                 <img
-                    class="h-14 max-sm:hidden"
+                    class="h-10 max-sm:hidden"
                     src="{{ request()->cookie('dark_mode') ? vite()->asset('images/dark-logo.svg') : vite()->asset('images/logo.svg') }}"
                     id="logo-image"
                     alt="{{ $wlAppName }}"
                 />
 
                 <img
-                    class="h-14 sm:hidden"
+                    class="h-10 sm:hidden"
                     src="{{ request()->cookie('dark_mode') ? vite()->asset('images/mobile-dark-logo.svg') : vite()->asset('images/mobile-light-logo.svg') }}"
                     id="logo-image"
                     alt="{{ $wlAppName }}"
