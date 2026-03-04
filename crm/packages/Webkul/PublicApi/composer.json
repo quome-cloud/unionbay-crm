@@ -1,0 +1,25 @@
+{
+    "name": "krayin/laravel-public-api",
+    "authors": [
+        {
+            "name": "Quome",
+            "email": "dev@quome.io"
+        }
+    ],
+    "require": {
+        "krayin/laravel-core": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webkul\\PublicApi\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Webkul\\PublicApi\\Providers\\PublicApiServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev"
+}

@@ -76,7 +76,8 @@
             "Webkul\\Warehouse\\": "packages/Webkul/Warehouse/src",
             "Webkul\\WebForm\\": "packages/Webkul/WebForm/src",
             "Webkul\\Automation\\": "packages/Webkul/Automation/src",
-            "Webkul\\WhiteLabel\\": "packages/Webkul/WhiteLabel/src"
+            "Webkul\\WhiteLabel\\": "packages/Webkul/WhiteLabel/src",
+            "Webkul\\PublicApi\\": "packages/Webkul/PublicApi/src"
         }
     },
     "autoload-dev": {
