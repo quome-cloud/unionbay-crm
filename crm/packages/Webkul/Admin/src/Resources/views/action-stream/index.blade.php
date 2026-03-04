@@ -108,7 +108,7 @@
                         v-for="action in actions"
                         :key="action.id"
                         class="flex items-center gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3 transition-all hover:shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700"
-                        :class="{ 'border-l-4': true, [priorityBorderClass(action.priority)]: true }"
+                        :class="{ 'border-l-4': true, [urgencyBorderClass(action.due_date)]: true }"
                         data-testid="action-stream-item"
                     >
                         <!-- Action Type Icon -->
@@ -123,6 +123,12 @@
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
                                 <span class="font-medium text-gray-900 dark:text-white" v-text="action.description || action.action_type"></span>
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-xs font-medium"
+                                    :class="urgencyLabelClass(action.due_date)"
+                                    v-text="urgencyLabel(action.due_date)"
+                                    data-testid="action-urgency-badge"
+                                ></span>
                                 <span
                                     class="rounded-full px-2 py-0.5 text-xs font-medium"
                                     :class="priorityBadgeClass(action.priority)"
@@ -300,6 +306,52 @@
                         if (diff <= 7) return `In ${diff}d`;
 
                         return date.toLocaleDateString();
+                    },
+
+                    urgencyBorderClass(dueDate) {
+                        const urgency = this.calculateUrgency(dueDate);
+                        return {
+                            overdue: '!border-l-red-500',
+                            today: '!border-l-orange-500',
+                            this_week: '!border-l-yellow-500',
+                            upcoming: '!border-l-green-500',
+                            none: '!border-l-gray-400',
+                        }[urgency] || '!border-l-gray-300';
+                    },
+
+                    calculateUrgency(dueDate) {
+                        if (!dueDate) return 'none';
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const due = new Date(dueDate);
+                        due.setHours(0, 0, 0, 0);
+                        const diffDays = Math.floor((due - today) / (1000 * 60 * 60 * 24));
+                        if (diffDays < 0) return 'overdue';
+                        if (diffDays === 0) return 'today';
+                        if (diffDays <= 7) return 'this_week';
+                        return 'upcoming';
+                    },
+
+                    urgencyLabel(dueDate) {
+                        const labels = {
+                            overdue: 'Overdue',
+                            today: 'Due Today',
+                            this_week: 'This Week',
+                            upcoming: 'Upcoming',
+                            none: 'No Date',
+                        };
+                        return labels[this.calculateUrgency(dueDate)] || '';
+                    },
+
+                    urgencyLabelClass(dueDate) {
+                        const urgency = this.calculateUrgency(dueDate);
+                        return {
+                            overdue: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                            today: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+                            this_week: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                            upcoming: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                            none: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
+                        }[urgency] || 'bg-gray-100 text-gray-500';
                     },
 
                     priorityBorderClass(priority) {

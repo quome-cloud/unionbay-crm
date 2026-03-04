@@ -52,6 +52,12 @@
 
                 {!! view_render_event('admin.leads.view.title.after', ['lead' => $lead]) !!}
 
+                <!-- Next Action Urgency Indicator -->
+                <x-admin::urgency-indicator
+                    entity-type="lead"
+                    :entity-id="$lead->id"
+                />
+
                 <!-- Activity Actions -->
                 <div class="flex flex-wrap gap-2">
                     {!! view_render_event('admin.leads.view.actions.before', ['lead' => $lead]) !!}

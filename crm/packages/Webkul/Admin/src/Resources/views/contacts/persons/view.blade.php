@@ -46,6 +46,12 @@
                     {!! view_render_event('admin.contact.persons.view.title.after', ['person' => $person]) !!}
                 </div>
                 
+                <!-- Next Action Urgency Indicator -->
+                <x-admin::urgency-indicator
+                    entity-type="person"
+                    :entity-id="$person->id"
+                />
+
                 <!-- Activity Actions -->
                 <div class="flex flex-wrap gap-2">
                     {!! view_render_event('admin.contact.persons.view.actions.before', ['person' => $person]) !!}
