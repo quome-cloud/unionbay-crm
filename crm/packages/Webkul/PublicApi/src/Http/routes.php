@@ -32,6 +32,7 @@ use Webkul\PublicApi\Http\Controllers\GoogleCalendarController;
 use Webkul\PublicApi\Http\Controllers\OutlookCalendarController;
 use Webkul\PublicApi\Http\Controllers\VoipController;
 use Webkul\PublicApi\Http\Controllers\EmailSyncController;
+use Webkul\PublicApi\Http\Controllers\SharedInboxController;
 
 Route::prefix('api/v1')->group(function () {
     // Public auth routes
@@ -241,6 +242,15 @@ Route::prefix('api/v1')->group(function () {
         Route::get('email-accounts/{id}/emails', [EmailSyncController::class, 'emails'])->where('id', '[0-9]+')->name('api.v1.email-accounts.emails');
         Route::get('email-accounts/{id}/filter-rules', [EmailSyncController::class, 'getFilterRules'])->where('id', '[0-9]+')->name('api.v1.email-accounts.filter-rules');
         Route::put('email-accounts/{id}/filter-rules', [EmailSyncController::class, 'updateFilterRules'])->where('id', '[0-9]+')->name('api.v1.email-accounts.filter-rules.update');
+
+        // Shared Team Inbox
+        Route::get('shared-inbox', [SharedInboxController::class, 'index'])->name('api.v1.shared-inbox.index');
+        Route::get('shared-inbox/emails', [SharedInboxController::class, 'emails'])->name('api.v1.shared-inbox.emails');
+        Route::post('shared-inbox/{accountId}/members', [SharedInboxController::class, 'addMember'])->where('accountId', '[0-9]+')->name('api.v1.shared-inbox.add-member');
+        Route::delete('shared-inbox/{accountId}/members/{memberId}', [SharedInboxController::class, 'removeMember'])->where('accountId', '[0-9]+')->where('memberId', '[0-9]+')->name('api.v1.shared-inbox.remove-member');
+        Route::get('shared-inbox/{accountId}/members', [SharedInboxController::class, 'members'])->where('accountId', '[0-9]+')->name('api.v1.shared-inbox.members');
+        Route::post('shared-inbox/emails/{emailId}/assign', [SharedInboxController::class, 'assign'])->where('emailId', '[0-9]+')->name('api.v1.shared-inbox.assign');
+        Route::post('shared-inbox/emails/{emailId}/read', [SharedInboxController::class, 'markRead'])->where('emailId', '[0-9]+')->name('api.v1.shared-inbox.mark-read');
 
         // VoIP / Click-to-Call
         Route::get('integrations/voip/status', [VoipController::class, 'status'])->name('api.v1.voip.status');
