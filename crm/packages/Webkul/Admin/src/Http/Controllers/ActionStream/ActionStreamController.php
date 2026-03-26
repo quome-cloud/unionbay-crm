@@ -23,6 +23,49 @@ class ActionStreamController extends Controller
     }
 
     /**
+     * Get the global prioritized action stream for the current user.
+     */
+    public function stream(Request $request): JsonResponse
+    {
+        $filters = $request->only(['action_type', 'priority', 'due_from', 'due_to']);
+
+        $query = $this->nextActionRepository->getPrioritizedActions(
+            auth()->guard('user')->id(),
+            $filters
+        );
+
+        $perPage = min((int) $request->get('per_page', 15), 100);
+
+        return response()->json($query->paginate($perPage));
+    }
+
+    /**
+     * Get the overdue action count for the current user.
+     */
+    public function overdueCount(): JsonResponse
+    {
+        $count = $this->nextActionRepository->getOverdueCount(
+            auth()->guard('user')->id()
+        );
+
+        return response()->json(['data' => ['overdue_count' => $count]]);
+    }
+
+    /**
+     * Snooze an action.
+     */
+    public function snooze(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'snooze_until' => 'required|date|after:now',
+        ]);
+
+        $action = $this->nextActionRepository->snooze($id, $request->get('snooze_until'));
+
+        return response()->json(['data' => $action, 'message' => 'Action snoozed.']);
+    }
+
+    /**
      * Get actions for a given entity (used by next-action-widget).
      */
     public function list(Request $request): JsonResponse

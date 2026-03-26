@@ -233,7 +233,7 @@
                             params.set('page', this.pagination.currentPage);
                             params.set('per_page', 15);
 
-                            const response = await this.$axios.get(`/api/v1/action-stream?${params}`);
+                            const response = await this.$axios.get(`/admin/action-stream/stream?${params}`);
                             const data = response.data;
 
                             this.actions = data.data || [];
@@ -252,7 +252,7 @@
 
                     async fetchOverdueCount() {
                         try {
-                            const response = await this.$axios.get('/api/v1/action-stream/overdue-count');
+                            const response = await this.$axios.get('/admin/action-stream/overdue-count');
                             this.overdueCount = response.data?.data?.overdue_count || 0;
                         } catch (error) {
                             this.overdueCount = 0;
@@ -261,7 +261,7 @@
 
                     async completeAction(id) {
                         try {
-                            await this.$axios.post(`/api/v1/action-stream/${id}/complete`);
+                            await this.$axios.post(`/admin/action-stream/${id}/complete`);
                             this.actions = this.actions.filter(a => a.id !== id);
                             this.fetchOverdueCount();
                         } catch (error) {
@@ -271,7 +271,7 @@
 
                     async snoozeAction(id) {
                         try {
-                            await this.$axios.post(`/api/v1/action-stream/${id}/snooze`, {
+                            await this.$axios.post(`/admin/action-stream/${id}/snooze`, {
                                 snooze_until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                             });
                             this.fetchActions();

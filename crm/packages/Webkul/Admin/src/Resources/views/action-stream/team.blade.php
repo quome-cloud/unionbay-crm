@@ -215,7 +215,7 @@
                 methods: {
                     async fetchMembers() {
                         try {
-                            const response = await this.$axios.get('/api/v1/team-stream/members');
+                            const response = await this.$axios.get('/admin/team-stream/members');
                             this.members = response.data?.data || [];
                         } catch (error) {
                             console.error('Failed to fetch team members:', error);
@@ -235,7 +235,7 @@
                             params.set('page', this.pagination.currentPage);
                             params.set('per_page', 20);
 
-                            const response = await this.$axios.get(`/api/v1/team-stream?${params}`);
+                            const response = await this.$axios.get(`/admin/team-stream/stream?${params}`);
                             const data = response.data;
 
                             this.actions = data.data || [];

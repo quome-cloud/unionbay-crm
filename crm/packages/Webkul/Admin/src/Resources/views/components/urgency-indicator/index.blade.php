@@ -130,7 +130,7 @@
             methods: {
                 async fetchNextAction() {
                     try {
-                        const response = await this.$axios.get('/api/v1/action-stream', {
+                        const response = await this.$axios.get('/admin/action-stream/list', {
                             params: {
                                 actionable_type: this.entityType,
                                 actionable_id: this.entityId,
@@ -170,7 +170,7 @@
                 async completeAction() {
                     if (!this.nextAction) return;
                     try {
-                        await this.$axios.post(`/api/v1/action-stream/${this.nextAction.id}/complete`);
+                        await this.$axios.post(`/admin/action-stream/${this.nextAction.id}/complete`);
                         this.nextAction = null;
                         this.loaded = false;
                         this.fetchNextAction();
