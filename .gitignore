@@ -9,6 +9,9 @@ extension/node_modules/
 # Environment files
 crm/.env
 
+# MCP config (contains API keys)
+.mcp.json
+
 # Build artifacts
 crm/public/build/
 crm/public/hot
