@@ -272,9 +272,10 @@
                     async snoozeAction(id) {
                         try {
                             await this.$axios.post(`/admin/action-stream/${id}/snooze`, {
-                                snooze_until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                                snooze_until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
                             });
                             this.fetchActions();
+                            this.fetchOverdueCount();
                         } catch (error) {
                             console.error('Failed to snooze action:', error);
                         }

@@ -112,6 +112,14 @@ class ActionStreamController extends Controller
 
         $data = $request->all();
 
+        // Strip empty strings that would fail date validation
+        if (array_key_exists('due_date', $data) && $data['due_date'] === '') {
+            unset($data['due_date']);
+        }
+        if (array_key_exists('due_time', $data) && $data['due_time'] === '') {
+            unset($data['due_time']);
+        }
+
         // Normalize singular to plural
         if ($data['actionable_type'] === 'lead') $data['actionable_type'] = 'leads';
         if ($data['actionable_type'] === 'person') $data['actionable_type'] = 'persons';

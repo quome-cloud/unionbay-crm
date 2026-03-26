@@ -279,23 +279,40 @@
                         await this.$axios.post(`/admin/action-stream/${this.currentAction.id}/complete`);
                         this.currentAction = null;
                         this.showCreateForm = true;
-                        this.fetchActions();
+                        await this.fetchActions();
                     } catch (error) {
+                        const msg = error.response?.data?.message || 'Failed to complete action.';
+                        if (typeof this.$emitter !== 'undefined') {
+                            this.$emitter.emit('add-flash', { type: 'error', message: msg });
+                        }
                         console.error('Failed to complete action:', error);
                     }
                 },
 
                 async createAction() {
                     try {
-                        await this.$axios.post('/admin/action-stream', {
+                        const payload = {
                             actionable_type: this.entityType,
                             actionable_id: this.entityId,
-                            ...this.newAction,
-                        });
+                            action_type: this.newAction.action_type,
+                            priority: this.newAction.priority,
+                            description: this.newAction.description,
+                        };
+
+                        // Only send due_date if actually set (empty string fails date validation)
+                        if (this.newAction.due_date) {
+                            payload.due_date = this.newAction.due_date;
+                        }
+
+                        await this.$axios.post('/admin/action-stream', payload);
                         this.resetForm();
                         this.showCreateForm = false;
                         this.fetchActions();
                     } catch (error) {
+                        const msg = error.response?.data?.message || 'Failed to save action. Please try again.';
+                        if (typeof this.$emitter !== 'undefined') {
+                            this.$emitter.emit('add-flash', { type: 'error', message: msg });
+                        }
                         console.error('Failed to create action:', error);
                     }
                 },
