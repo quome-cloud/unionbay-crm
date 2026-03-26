@@ -167,3 +167,56 @@ test.describe('Delivery Pipeline', () => {
     expect(res.status()).toBe(422);
   });
 });
+
+test.describe('Insurance Pipeline Stages', () => {
+  let defaultPipelineId: number;
+
+  test('find default pipeline', async () => {
+    const res = await api.get('/api/v1/pipelines', {
+      headers: authHeaders(),
+    });
+    expect(res.ok()).toBeTruthy();
+    const body = await res.json();
+    const defaultPipeline = body.data.find((p: any) => p.is_default === 1);
+    expect(defaultPipeline).toBeTruthy();
+    defaultPipelineId = defaultPipeline.id;
+  });
+
+  test('default pipeline has 8 insurance stages in correct order', async () => {
+    const res = await api.get(`/api/v1/pipelines/${defaultPipelineId}`, {
+      headers: authHeaders(),
+    });
+    expect(res.ok()).toBeTruthy();
+    const body = await res.json();
+    const stages = body.data.stages;
+    expect(stages.length).toBeGreaterThanOrEqual(8);
+
+    const expectedCodes = ['new', 'recruits', 'prospect', 'data-gathering', 'quoting', 'presenting', 'won', 'lost'];
+    const expectedNames = ['New', 'Recruits', 'Prospect', 'Data Gathering', 'Quoting', 'Presenting', 'Won', 'Loss'];
+
+    const sorted = [...stages].sort((a: any, b: any) => a.sort_order - b.sort_order);
+
+    for (let i = 0; i < expectedCodes.length; i++) {
+      expect(sorted[i].code).toBe(expectedCodes[i]);
+      expect(sorted[i].name).toBe(expectedNames[i]);
+    }
+  });
+
+  test('probabilities increase through the pipeline', async () => {
+    const res = await api.get(`/api/v1/pipelines/${defaultPipelineId}`, {
+      headers: authHeaders(),
+    });
+    const body = await res.json();
+    const sorted = [...body.data.stages].sort((a: any, b: any) => a.sort_order - b.sort_order);
+
+    const won = sorted.find((s: any) => s.code === 'won');
+    const lost = sorted.find((s: any) => s.code === 'lost');
+    expect(won.probability).toBe(100);
+    expect(lost.probability).toBe(0);
+
+    const middle = sorted.filter((s: any) => !['won', 'lost'].includes(s.code));
+    for (let i = 1; i < middle.length; i++) {
+      expect(middle[i].probability).toBeGreaterThanOrEqual(middle[i - 1].probability);
+    }
+  });
+});
