@@ -140,12 +140,12 @@
                             <button
                                 type="button"
                                 class="rounded-md border px-3 py-1.5 text-xs font-medium"
-                                :class="newAction.description ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700 cursor-pointer' : 'bg-gray-300 border-gray-400 text-gray-700 cursor-not-allowed dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300'"
+                                :class="(!newAction.description || saving) ? 'bg-gray-300 border-gray-400 text-gray-700 cursor-not-allowed dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300' : 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700 cursor-pointer'"
                                 @click="createAction"
-                                :disabled="!newAction.description"
+                                :disabled="!newAction.description || saving"
                                 data-testid="next-action-save-btn"
                             >
-                                Save Action
+                                @{{ saving ? 'Saving...' : 'Save Action' }}
                             </button>
                         </div>
                     </div>
@@ -217,6 +217,7 @@
                     completedActions: [],
                     loaded: false,
                     showCreateForm: false,
+                    saving: false,
                     urgency: 'none',
                     newAction: {
                         action_type: 'call',
@@ -328,6 +329,8 @@
                 },
 
                 async createAction() {
+                    if (this.saving) return;
+                    this.saving = true;
                     try {
                         const payload = {
                             actionable_type: this.entityType,
@@ -352,6 +355,8 @@
                             this.$emitter.emit('add-flash', { type: 'error', message: msg });
                         }
                         console.error('Failed to create action:', error);
+                    } finally {
+                        this.saving = false;
                     }
                 },
 
