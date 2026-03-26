@@ -10,6 +10,7 @@ Route::controller(ActionStreamController::class)->prefix('action-stream')->group
     Route::get('overdue-count', 'overdueCount')->name('admin.action-stream.overdue-count');
     Route::get('list', 'list')->name('admin.action-stream.list');
     Route::post('', 'store')->name('admin.action-stream.store');
+    Route::put('{id}', 'update')->name('admin.action-stream.update');
     Route::post('{id}/complete', 'complete')->name('admin.action-stream.complete');
     Route::post('{id}/snooze', 'snooze')->name('admin.action-stream.snooze');
 });

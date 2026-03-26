@@ -30,13 +30,12 @@
                     </button>
                 </div>
 
-                <!-- Current Action Card -->
-                <div v-if="currentAction && !showCreateForm" class="p-4">
+                <!-- Current Action Card — View Mode -->
+                <div v-if="currentAction && !showCreateForm && !editing" class="p-4">
                     <div class="flex items-start gap-3" data-testid="next-action-current">
-                        <!-- Urgency Dot -->
                         <div class="mt-1 flex h-3 w-3 flex-shrink-0 rounded-full" :class="urgencyDotClass"></div>
 
-                        <div class="min-w-0 flex-1">
+                        <div class="min-w-0 flex-1 cursor-pointer" @click="startEditing" title="Click to edit">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm font-medium text-gray-900 dark:text-white">
                                     @{{ currentAction.description || currentAction.action_type }}
@@ -50,10 +49,12 @@
                                 <span v-text="currentAction.action_type"></span>
                                 <span v-if="currentAction.due_date">&middot; @{{ formatDate(currentAction.due_date) }}</span>
                                 <span class="rounded-full px-1.5 py-0.5" :class="priorityBadgeClass" v-text="currentAction.priority"></span>
+                                <span class="ml-1 text-blue-500 opacity-0 transition-opacity group-hover:opacity-100 dark:text-blue-400">
+                                    <span class="icon-edit text-xs"></span>
+                                </span>
                             </div>
                         </div>
 
-                        <!-- Complete Button -->
                         <button
                             type="button"
                             class="flex-shrink-0 rounded-md border border-green-600 bg-green-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-green-700 hover:border-green-700 dark:bg-green-700 dark:border-green-700 dark:hover:bg-green-600"
@@ -62,6 +63,65 @@
                         >
                             Complete
                         </button>
+                    </div>
+                </div>
+
+                <!-- Current Action Card — Edit Mode -->
+                <div v-if="currentAction && editing" class="p-4" data-testid="next-action-edit-form">
+                    <div class="flex flex-col gap-3">
+                        <div class="flex gap-2">
+                            <select
+                                v-model="editData.action_type"
+                                class="w-1/3 rounded-md border border-gray-300 px-2 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                data-testid="edit-action-type"
+                            >
+                                <option value="call">Call</option>
+                                <option value="email">Email</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="task">Task</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                            <select
+                                v-model="editData.priority"
+                                class="w-1/3 rounded-md border border-gray-300 px-2 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                data-testid="edit-action-priority"
+                            >
+                                <option value="urgent">Urgent</option>
+                                <option value="high">High</option>
+                                <option value="normal">Normal</option>
+                                <option value="low">Low</option>
+                            </select>
+                            <input
+                                type="date"
+                                v-model="editData.due_date"
+                                class="w-1/3 rounded-md border border-gray-300 px-2 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                data-testid="edit-action-due-date"
+                            />
+                        </div>
+                        <input
+                            type="text"
+                            v-model="editData.description"
+                            class="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                            data-testid="edit-action-description"
+                        />
+                        <div class="flex justify-end gap-2">
+                            <button
+                                type="button"
+                                class="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                                @click="cancelEditing"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded-md border border-blue-600 bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 cursor-pointer"
+                                :disabled="updating"
+                                @click="saveEdit"
+                                data-testid="edit-action-save-btn"
+                            >
+                                @{{ updating ? 'Saving...' : 'Save Changes' }}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -218,6 +278,9 @@
                     loaded: false,
                     showCreateForm: false,
                     saving: false,
+                    editing: false,
+                    updating: false,
+                    editData: {},
                     urgency: 'none',
                     newAction: {
                         action_type: 'call',
@@ -363,6 +426,51 @@
                 cancelCreate() {
                     this.showCreateForm = false;
                     this.resetForm();
+                },
+
+                startEditing() {
+                    this.editData = {
+                        action_type: this.currentAction.action_type,
+                        priority: this.currentAction.priority,
+                        due_date: this.currentAction.due_date ? this.currentAction.due_date.split('T')[0] : '',
+                        description: this.currentAction.description || '',
+                    };
+                    this.editing = true;
+                },
+
+                cancelEditing() {
+                    this.editing = false;
+                    this.editData = {};
+                },
+
+                async saveEdit() {
+                    if (this.updating) return;
+                    this.updating = true;
+                    try {
+                        const payload = {
+                            action_type: this.editData.action_type,
+                            priority: this.editData.priority,
+                            description: this.editData.description,
+                        };
+                        if (this.editData.due_date) {
+                            payload.due_date = this.editData.due_date;
+                        } else {
+                            payload.due_date = null;
+                        }
+
+                        await this.$axios.put(`/admin/action-stream/${this.currentAction.id}`, payload);
+                        this.editing = false;
+                        this.editData = {};
+                        await this.fetchActions();
+                    } catch (error) {
+                        const msg = error.response?.data?.message || 'Failed to update action.';
+                        if (typeof this.$emitter !== 'undefined') {
+                            this.$emitter.emit('add-flash', { type: 'error', message: msg });
+                        }
+                        console.error('Failed to update action:', error);
+                    } finally {
+                        this.updating = false;
+                    }
                 },
 
                 resetForm() {

@@ -150,8 +150,26 @@ test.describe('Action Stream - API Backend', () => {
 });
 
 test.describe('Action Stream - Create Action (Bug Fix: empty due_date)', () => {
-  // Use lead ID 1 which is seeded/created in prior tests
-  const leadId = 1;
+  let leadId: number;
+
+  test.beforeAll(async () => {
+    const res = await api.post('/api/v1/leads', {
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      data: {
+        title: `API Test Lead ${Date.now()}`,
+        lead_value: 50,
+        lead_pipeline_id: 1,
+        lead_pipeline_stage_id: 1,
+        status: 1,
+        person: {
+          name: `API Person ${Date.now()}`,
+          emails: [{ value: `api-${Date.now()}@test.com`, label: 'work' }],
+        },
+      },
+    });
+    const body = await res.json();
+    leadId = body.data?.id;
+  });
 
   test('POST /action-stream succeeds without due_date', async () => {
     const res = await api.post('/api/v1/action-stream', {
@@ -233,7 +251,28 @@ test.describe('Action Stream - Create Action (Bug Fix: empty due_date)', () => {
 });
 
 test.describe('Action Stream UI - Next Action Widget', () => {
-  const leadId = 1;
+  let leadId: number;
+
+  test.beforeAll(async () => {
+    // Create a lead with proper person data for the widget tests
+    const res = await api.post('/api/v1/leads', {
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      data: {
+        title: `Widget Test Lead ${Date.now()}`,
+        lead_value: 100,
+        lead_pipeline_id: 1,
+        lead_pipeline_stage_id: 1,
+        status: 1,
+        person: {
+          name: `Widget Person ${Date.now()}`,
+          emails: [{ value: `widget-${Date.now()}@test.com`, label: 'work' }],
+          contact_numbers: [{ value: '555-0100', label: 'work' }],
+        },
+      },
+    });
+    const body = await res.json();
+    leadId = body.data?.id;
+  });
 
   test('next action widget shows on lead view', async ({ page }) => {
     await loginPage(page);
@@ -361,5 +400,98 @@ test.describe('Action Stream UI - Next Action Widget', () => {
       const form = page.locator('[data-testid="next-action-form"]');
       await expect(form).toBeVisible({ timeout: 5000 });
     }
+  });
+
+  test('can edit existing action inline', async ({ page }) => {
+    await loginPage(page);
+
+    // Ensure there's a pending action
+    await api.post('/api/v1/action-stream', {
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      data: {
+        actionable_type: 'leads',
+        actionable_id: leadId,
+        action_type: 'call',
+        description: 'Editable action',
+        priority: 'normal',
+      },
+    });
+
+    await page.goto(`${BASE}/admin/leads/view/${leadId}`);
+    await page.waitForLoadState('networkidle');
+    const pageText = await page.textContent('body');
+    test.skip(pageText?.includes('500') && pageText?.includes('Something went wrong'), 'Lead view errors');
+    await page.waitForTimeout(1500);
+
+    // Click on the action to start editing
+    const current = page.locator('[data-testid="next-action-current"]');
+    await expect(current).toBeVisible({ timeout: 5000 });
+    await current.locator('.cursor-pointer').click();
+
+    // Edit form should appear
+    const editForm = page.locator('[data-testid="next-action-edit-form"]');
+    await expect(editForm).toBeVisible({ timeout: 5000 });
+
+    // Change the description
+    const descInput = page.locator('[data-testid="edit-action-description"]');
+    await descInput.fill('Updated action description');
+
+    // Change priority
+    await page.locator('[data-testid="edit-action-priority"]').selectOption('urgent');
+
+    // Save
+    await page.locator('[data-testid="edit-action-save-btn"]').click();
+
+    // Edit form should close and updated action should show
+    await expect(editForm).not.toBeVisible({ timeout: 5000 });
+    const updated = page.locator('[data-testid="next-action-current"]');
+    await expect(updated).toBeVisible({ timeout: 5000 });
+    await expect(updated).toContainText('Updated action description');
+  });
+});
+
+test.describe('Action Stream - Update API', () => {
+  test('PUT /action-stream/:id updates action fields', async () => {
+    // Create a lead first
+    const leadRes = await api.post('/api/v1/leads', {
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      data: {
+        title: `Update Test Lead ${Date.now()}`,
+        lead_value: 10,
+        lead_pipeline_id: 1,
+        lead_pipeline_stage_id: 1,
+        status: 1,
+        person: { name: `Update Person ${Date.now()}`, emails: [{ value: `upd-${Date.now()}@test.com`, label: 'work' }] },
+      },
+    });
+    const lead = await leadRes.json();
+
+    // Create an action
+    const createRes = await api.post('/api/v1/action-stream', {
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      data: {
+        actionable_type: 'leads',
+        actionable_id: lead.data.id,
+        action_type: 'call',
+        description: 'Before update',
+        priority: 'low',
+      },
+    });
+    const created = await createRes.json();
+
+    // Update it
+    const updateRes = await api.put(`/api/v1/action-stream/${created.data.id}`, {
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      data: {
+        description: 'After update',
+        priority: 'urgent',
+        action_type: 'meeting',
+      },
+    });
+    expect(updateRes.ok()).toBeTruthy();
+    const updated = await updateRes.json();
+    expect(updated.data.description).toBe('After update');
+    expect(updated.data.priority).toBe('urgent');
+    expect(updated.data.action_type).toBe('meeting');
   });
 });

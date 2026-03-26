@@ -133,6 +133,34 @@ class ActionStreamController extends Controller
     }
 
     /**
+     * Update an existing action.
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'action_type' => 'sometimes|string|in:call,email,meeting,task,custom',
+            'description' => 'sometimes|string|max:1000',
+            'due_date'    => 'sometimes|nullable|date',
+            'due_time'    => 'sometimes|nullable|date_format:H:i',
+            'priority'    => 'sometimes|string|in:urgent,high,normal,low',
+        ]);
+
+        $data = $request->only(['action_type', 'description', 'due_date', 'due_time', 'priority']);
+
+        if (array_key_exists('due_date', $data) && $data['due_date'] === '') {
+            $data['due_date'] = null;
+        }
+        if (array_key_exists('due_time', $data) && $data['due_time'] === '') {
+            $data['due_time'] = null;
+        }
+
+        $action = $this->nextActionRepository->findOrFail($id);
+        $action->update($data);
+
+        return response()->json(['data' => $action->fresh(), 'message' => 'Action updated.']);
+    }
+
+    /**
      * Mark an action as completed.
      */
     public function complete(int $id): JsonResponse
