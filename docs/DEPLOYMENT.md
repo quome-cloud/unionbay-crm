@@ -162,6 +162,82 @@ Set `BASE_URL` to target a different environment:
 BASE_URL=http://staging.example.com npx playwright test
 ```
 
+## Railway Deployment (Union Bay CRM)
+
+This project is deployed on [Railway](https://railway.app) with autodeploy from the `main` branch.
+
+### Railway Project Details
+
+| Setting | Value |
+|---------|-------|
+| **Project ID** | `d65119ac-4b43-483b-b54a-d911d465e464` |
+| **Environment ID** | `07ef2598-e1e7-4486-8dc9-281112b70877` |
+| **Service** | `crm-app` |
+| **Repository** | `quome-cloud/unionbay-crm` |
+| **Branch** | `main` (autodeploy) |
+| **Dashboard** | https://railway.com/project/d65119ac-4b43-483b-b54a-d911d465e464 |
+
+### How Autodeploy Works
+
+Every push to `main` triggers a new Railway deployment automatically. The `crm-app` service is connected to the `quome-cloud/unionbay-crm` GitHub repo.
+
+### Railway CLI
+
+Install the Railway CLI for managing deployments from the terminal:
+
+```bash
+# Install
+npm i -g @railway/cli
+# or
+brew install railway
+
+# Login
+railway login
+
+# Link to this project
+railway link d65119ac-4b43-483b-b54a-d911d465e464
+
+# View logs
+railway logs
+
+# Open the Railway dashboard
+railway open
+
+# Deploy manually (bypasses autodeploy)
+railway up
+
+# Set environment variables
+railway variables set KEY=VALUE
+
+# Open a shell in the running service
+railway shell
+```
+
+### Environment Variables on Railway
+
+Configure these in the Railway dashboard or via CLI. Railway provides `DATABASE_URL`, `REDIS_URL`, etc. for linked services automatically.
+
+Key variables to set:
+
+| Variable | Description |
+|----------|-------------|
+| `APP_ENV` | `production` |
+| `APP_DEBUG` | `false` |
+| `APP_URL` | Your Railway public domain |
+| `APP_KEY` | Laravel app key (`php artisan key:generate --show`) |
+| `SESSION_DRIVER` | `file` (recommended for Railway) |
+| `QUEUE_CONNECTION` | `sync` (or `redis` if Redis service is added) |
+
+### Viewing Deployment Status
+
+```bash
+# Via CLI
+railway status
+
+# Via dashboard
+# https://railway.com/project/d65119ac-4b43-483b-b54a-d911d465e464/settings?environmentId=07ef2598-e1e7-4486-8dc9-281112b70877
+```
+
 ## Production Considerations
 
 1. **Change default credentials** — Update admin password immediately
