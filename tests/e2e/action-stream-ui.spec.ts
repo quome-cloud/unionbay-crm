@@ -246,8 +246,18 @@ test.describe('Action Stream UI - Next Action Widget', () => {
     await expect(widget).toBeVisible({ timeout: 10000 });
   });
 
-  test('can create action via widget without due date', async ({ page }) => {
+  test('can create action via widget', async ({ page }) => {
     await loginPage(page);
+
+    // Complete all existing pending actions for this lead first
+    const pendingRes = await api.get(`/api/v1/action-stream?actionable_type=leads&actionable_id=${leadId}&status=pending`, {
+      headers: authHeaders(),
+    });
+    const pending = await pendingRes.json();
+    for (const action of (pending.data || [])) {
+      await api.post(`/api/v1/action-stream/${action.id}/complete`, { headers: authHeaders() });
+    }
+
     const resp = await page.goto(`${BASE}/admin/leads/view/${leadId}`);
     await page.waitForLoadState('networkidle');
     const pageText = await page.textContent('body');
@@ -268,7 +278,17 @@ test.describe('Action Stream UI - Next Action Widget', () => {
 
     await page.locator('[data-testid="next-action-type-select"]').selectOption('call');
     await page.locator('[data-testid="next-action-priority-select"]').selectOption('high');
-    await page.locator('[data-testid="next-action-description"]').fill('Test call without date');
+
+    // Date should default to today
+    const dateInput = page.locator('[data-testid="next-action-due-date"]');
+    const dateValue = await dateInput.inputValue();
+    expect(dateValue).toBe(new Date().toISOString().split('T')[0]);
+
+    // Date shortcuts should be visible
+    const shortcuts = page.locator('[data-testid="next-action-date-shortcuts"]');
+    await expect(shortcuts).toBeVisible();
+
+    await page.locator('[data-testid="next-action-description"]').fill('Widget created action');
 
     // Save button should be enabled now
     const saveBtn = page.locator('[data-testid="next-action-save-btn"]');
@@ -281,7 +301,7 @@ test.describe('Action Stream UI - Next Action Widget', () => {
     // The current action should now be visible
     const current = page.locator('[data-testid="next-action-current"]');
     await expect(current).toBeVisible({ timeout: 5000 });
-    await expect(current).toContainText('Test call without date');
+    await expect(current).toContainText('Widget created action');
   });
 
   test('save button is disabled without description', async ({ page }) => {

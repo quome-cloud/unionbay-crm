@@ -97,6 +97,31 @@
                                 data-testid="next-action-due-date"
                             />
                         </div>
+                        <!-- Quick date shortcuts -->
+                        <div class="flex gap-1.5" data-testid="next-action-date-shortcuts">
+                            <button
+                                type="button"
+                                v-for="shortcut in dateShortcuts"
+                                :key="shortcut.label"
+                                class="rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+                                :class="newAction.due_date === shortcut.value
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-600'
+                                    : 'border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'"
+                                @click="newAction.due_date = shortcut.value"
+                                :data-testid="'date-shortcut-' + shortcut.label.toLowerCase().replace(/\\s/g, '-')"
+                            >
+                                @{{ shortcut.label }}
+                            </button>
+                            <button
+                                v-if="newAction.due_date"
+                                type="button"
+                                class="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                                @click="newAction.due_date = ''"
+                                data-testid="date-shortcut-clear"
+                            >
+                                Clear
+                            </button>
+                        </div>
                         <input
                             type="text"
                             v-model="newAction.description"
@@ -196,13 +221,26 @@
                     newAction: {
                         action_type: 'call',
                         priority: 'normal',
-                        due_date: '',
+                        due_date: new Date().toISOString().split('T')[0],
                         description: '',
                     },
                 };
             },
 
             computed: {
+                dateShortcuts() {
+                    const today = new Date();
+                    const fmt = (d) => d.toISOString().split('T')[0];
+                    const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; };
+                    const nextMonday = new Date(today);
+                    nextMonday.setDate(today.getDate() + ((8 - today.getDay()) % 7 || 7));
+                    return [
+                        { label: 'Today', value: fmt(today) },
+                        { label: 'Tomorrow', value: fmt(addDays(today, 1)) },
+                        { label: 'Next Week', value: fmt(nextMonday) },
+                    ];
+                },
+
                 urgencyLabel() {
                     return { overdue: 'Overdue', today: 'Due Today', this_week: 'This Week', upcoming: 'Upcoming', none: 'No Date' }[this.urgency] || '';
                 },
@@ -326,7 +364,7 @@
                     this.newAction = {
                         action_type: 'call',
                         priority: 'normal',
-                        due_date: '',
+                        due_date: new Date().toISOString().split('T')[0],
                         description: '',
                     };
                 },
