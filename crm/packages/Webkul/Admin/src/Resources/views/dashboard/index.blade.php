@@ -101,6 +101,23 @@
             {!! view_render_event('admin.dashboard.index.date_filters.before') !!}
 
             <div class="flex gap-1.5">
+                <!-- User Filter (Manager View) -->
+                <select
+                    v-if="users.length > 0"
+                    v-model="filters.user_id"
+                    class="flex min-h-[39px] rounded-md border px-3 py-2 text-sm text-gray-600 transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400"
+                    data-testid="dashboard-user-filter"
+                >
+                    <option value="">All Team Members</option>
+                    <option
+                        v-for="user in users"
+                        :key="user.id"
+                        :value="user.id"
+                    >
+                        @{{ user.name }}
+                    </option>
+                </select>
+
                 <x-admin::flat-picker.date
                     class="!w-[140px]"
                     ::allow-input="false"
@@ -135,14 +152,22 @@
 
                 data() {
                     return {
+                        users: [],
+
                         filters: {
                             channel: '',
+
+                            user_id: '',
 
                             start: "{{ $startDate->format('Y-m-d') }}",
 
                             end: "{{ $endDate->format('Y-m-d') }}",
                         }
                     }
+                },
+
+                mounted() {
+                    this.fetchUsers();
                 },
 
                 watch: {
@@ -153,6 +178,17 @@
 
                         deep: true
                     }
+                },
+
+                methods: {
+                    async fetchUsers() {
+                        try {
+                            const response = await this.$axios.get('/admin/team-stream/members');
+                            this.users = response.data?.data || [];
+                        } catch {
+                            this.users = [];
+                        }
+                    },
                 },
             });
         </script>

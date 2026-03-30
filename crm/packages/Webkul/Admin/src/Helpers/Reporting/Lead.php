@@ -48,6 +48,20 @@ class Lead extends AbstractReporting
     }
 
     /**
+     * Get a base lead query with optional user_id filtering applied.
+     */
+    protected function baseQuery()
+    {
+        $query = $this->leadRepository->resetModel();
+
+        if ($this->userId) {
+            $query = $query->where('user_id', $this->userId);
+        }
+
+        return $query;
+    }
+
+    /**
      * Returns current customers over time
      *
      * @param  string  $period
@@ -135,8 +149,7 @@ class Lead extends AbstractReporting
      */
     public function getTotalLeads($startDate, $endDate): int
     {
-        return $this->leadRepository
-            ->resetModel()
+        return $this->baseQuery()
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
     }
@@ -191,8 +204,7 @@ class Lead extends AbstractReporting
      */
     public function getTotalLeadValue($startDate, $endDate): float
     {
-        return $this->leadRepository
-            ->resetModel()
+        return $this->baseQuery()
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('lead_value');
     }
@@ -218,8 +230,7 @@ class Lead extends AbstractReporting
      */
     public function getAverageLeadValue($startDate, $endDate): float
     {
-        return $this->leadRepository
-            ->resetModel()
+        return $this->baseQuery()
             ->whereBetween('created_at', [$startDate, $endDate])
             ->avg('lead_value') ?? 0;
     }
@@ -246,8 +257,7 @@ class Lead extends AbstractReporting
      */
     public function getTotalWonLeadValue($startDate, $endDate): ?float
     {
-        return $this->leadRepository
-            ->resetModel()
+        return $this->baseQuery()
             ->whereIn('lead_pipeline_stage_id', $this->wonStageIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('lead_value');
@@ -275,8 +285,7 @@ class Lead extends AbstractReporting
      */
     public function getTotalLostLeadValue($startDate, $endDate): ?float
     {
-        return $this->leadRepository
-            ->resetModel()
+        return $this->baseQuery()
             ->whereIn('lead_pipeline_stage_id', $this->lostStageIds)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('lead_value');
@@ -287,8 +296,7 @@ class Lead extends AbstractReporting
      */
     public function getTotalWonLeadValueBySources()
     {
-        return $this->leadRepository
-            ->resetModel()
+        return $this->baseQuery()
             ->select(
                 'lead_sources.name',
                 DB::raw('SUM(lead_value) as total')
@@ -305,8 +313,7 @@ class Lead extends AbstractReporting
      */
     public function getTotalWonLeadValueByTypes()
     {
-        return $this->leadRepository
-            ->resetModel()
+        return $this->baseQuery()
             ->select(
                 'lead_types.name',
                 DB::raw('SUM(lead_value) as total')
@@ -323,8 +330,7 @@ class Lead extends AbstractReporting
      */
     public function getOpenLeadsByStates()
     {
-        return $this->leadRepository
-            ->resetModel()
+        return $this->baseQuery()
             ->select(
                 'lead_pipeline_stages.name',
                 DB::raw('COUNT(lead_value) as total')
@@ -355,8 +361,7 @@ class Lead extends AbstractReporting
 
         $groupColumn = $this->getGroupColumn($dateColumn, $period);
 
-        $query = $this->leadRepository
-            ->resetModel()
+        $query = $this->baseQuery()
             ->select(
                 DB::raw("$groupColumn AS date"),
                 DB::raw('COUNT(DISTINCT id) AS count'),

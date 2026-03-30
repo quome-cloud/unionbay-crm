@@ -134,3 +134,33 @@ test.describe('Dashboard API', () => {
     expect(body.data.revenue.pipeline_value).toBeGreaterThanOrEqual(0);
   });
 });
+
+test.describe('Dashboard - Manager User Filter UI', () => {
+  test('dashboard page has user filter dropdown', async ({ page }) => {
+    await page.goto(`${BASE}/admin/login`);
+    await page.fill('input[name="email"]', 'admin@example.com');
+    await page.fill('input[name="password"]', 'admin123');
+    await page.click('.primary-button');
+    await page.waitForURL(/\/admin/, { timeout: 15000 });
+
+    await page.goto(`${BASE}/admin/dashboard`);
+    await page.waitForLoadState('networkidle');
+
+    const userFilter = page.locator('[data-testid="dashboard-user-filter"]');
+    await expect(userFilter).toBeVisible({ timeout: 5000 });
+
+    // Should have "All Team Members" as first option
+    const firstOption = userFilter.locator('option').first();
+    await expect(firstOption).toHaveText('All Team Members');
+  });
+
+  test('admin stats endpoint accepts user_id parameter', async () => {
+    const res = await api.get('/api/v1/dashboard?user_id=1', {
+      headers: authHeaders(),
+    });
+    expect(res.ok()).toBeTruthy();
+    const body = await res.json();
+    expect(body.data).toBeTruthy();
+    expect(body.data.leads).toBeTruthy();
+  });
+});
