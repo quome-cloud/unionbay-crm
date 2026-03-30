@@ -100,7 +100,7 @@
         >
             {!! view_render_event('admin.dashboard.index.date_filters.before') !!}
 
-            <div class="flex gap-1.5">
+            <div class="flex flex-wrap gap-1.5">
                 <!-- User Filter (Manager View) -->
                 <select
                     v-if="users.length > 0"
@@ -117,6 +117,23 @@
                         @{{ user.name }}
                     </option>
                 </select>
+
+                <!-- Timeframe Quick Selects -->
+                <div class="flex rounded-md border dark:border-gray-800" data-testid="dashboard-timeframe-buttons">
+                    <button
+                        v-for="tf in timeframes"
+                        :key="tf.label"
+                        type="button"
+                        class="px-3 py-2 text-xs font-medium transition-colors first:rounded-l-md last:rounded-r-md"
+                        :class="activeTimeframe === tf.label
+                            ? 'bg-brandColor text-white'
+                            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'"
+                        @click="setTimeframe(tf)"
+                        :data-testid="'timeframe-' + tf.label.toLowerCase()"
+                    >
+                        @{{ tf.label }}
+                    </button>
+                </div>
 
                 <x-admin::flat-picker.date
                     class="!w-[140px]"
@@ -154,6 +171,16 @@
                     return {
                         users: [],
 
+                        activeTimeframe: 'Month',
+
+                        timeframes: [
+                            { label: 'Week',     days: 7 },
+                            { label: 'Month',    days: 30 },
+                            { label: 'Quarter',  days: 90 },
+                            { label: 'Year',     days: 365 },
+                            { label: 'Lifetime', days: 3650 },
+                        ],
+
                         filters: {
                             channel: '',
 
@@ -188,6 +215,15 @@
                         } catch {
                             this.users = [];
                         }
+                    },
+
+                    setTimeframe(tf) {
+                        this.activeTimeframe = tf.label;
+                        const end = new Date();
+                        const start = new Date();
+                        start.setDate(end.getDate() - tf.days);
+                        this.filters.start = start.toISOString().split('T')[0];
+                        this.filters.end = end.toISOString().split('T')[0];
                     },
                 },
             });

@@ -163,4 +163,24 @@ test.describe('Dashboard - Manager User Filter UI', () => {
     expect(body.data).toBeTruthy();
     expect(body.data.leads).toBeTruthy();
   });
+
+  test('dashboard has timeframe quick-select buttons', async ({ page }) => {
+    await page.goto(`${BASE}/admin/login`);
+    await page.fill('input[name="email"]', 'admin@example.com');
+    await page.fill('input[name="password"]', 'admin123');
+    await page.click('.primary-button');
+    await page.waitForURL(/\/admin/, { timeout: 15000 });
+
+    await page.goto(`${BASE}/admin/dashboard`);
+    await page.waitForLoadState('networkidle');
+
+    const buttons = page.locator('[data-testid="dashboard-timeframe-buttons"]');
+    await expect(buttons).toBeVisible({ timeout: 5000 });
+
+    // Should have Week, Month, Quarter, Year, Lifetime buttons
+    await expect(page.locator('[data-testid="timeframe-week"]')).toBeVisible();
+    await expect(page.locator('[data-testid="timeframe-month"]')).toBeVisible();
+    await expect(page.locator('[data-testid="timeframe-year"]')).toBeVisible();
+    await expect(page.locator('[data-testid="timeframe-lifetime"]')).toBeVisible();
+  });
 });
